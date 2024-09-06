@@ -1,4 +1,4 @@
-package io_test
+package linereader_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	ario "github.com/asymmetric-research/go-commons/io"
+	"github.com/asymmetric-research/go-commons/io/linereader"
 	"github.com/stretchr/testify/require"
 
 	gocmd "github.com/go-cmd/cmd"
@@ -16,7 +16,7 @@ import (
 func TestLineReader(t *testing.T) {
 	expectedLines := strings.Split(report, "\n")
 
-	r := ario.NewLineReader(strings.NewReader(report), 4096)
+	r := linereader.New(strings.NewReader(report), 4096)
 	var linesback [8192]byte
 	var line []byte
 
@@ -37,7 +37,7 @@ func TestLineReader(t *testing.T) {
 func TestLinesOfReaderTruncation(t *testing.T) {
 	expectedLines := strings.Split(report, "\n")
 
-	r := ario.NewLineReader(strings.NewReader(report), 4096)
+	r := linereader.New(strings.NewReader(report), 4096)
 	var linesback [10]byte
 	var line []byte
 
@@ -123,9 +123,9 @@ func BenchmarkGoCmdLargeReads(b *testing.B) {
 
 func runOurs(t require.TestingT, r io.Reader) {
 	var err error
-	rd := ario.LineReader{}
+	rd := linereader.T{}
 	lineBacking := [8192]byte{}
-	ario.NewlineReaderInto(&rd, r, 4096)
+	linereader.NewInto(&rd, r, 4096)
 
 	cnt := 0
 	for err == nil {

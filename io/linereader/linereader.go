@@ -1,4 +1,4 @@
-package io
+package linereader
 
 import (
 	"bytes"
@@ -7,21 +7,21 @@ import (
 	armath "github.com/asymmetric-research/go-commons/math"
 )
 
-type LineReader struct {
+type T struct {
 	reader      io.Reader
 	readbufbase []byte
 	readbuf     []byte
 	blocksize   uint
 }
 
-func NewLineReader(reader io.Reader, blockSize uint) *LineReader {
-	lr := &LineReader{}
-	NewlineReaderInto(lr, reader, blockSize)
+func New(reader io.Reader, blockSize uint) *T {
+	lr := &T{}
+	NewInto(lr, reader, blockSize)
 	return lr
 }
 
-func NewlineReaderInto(dst *LineReader, reader io.Reader, blockSize uint) {
-	*dst = LineReader{
+func NewInto(dst *T, reader io.Reader, blockSize uint) {
+	*dst = T{
 		reader:      reader,
 		readbufbase: make([]byte, blockSize),
 		blocksize:   blockSize,
@@ -30,7 +30,7 @@ func NewlineReaderInto(dst *LineReader, reader io.Reader, blockSize uint) {
 
 // Read reads as much as possible into p, until the next newline or EOF is reached.
 // Every new call to read starts on a new line. The remainder of the previous line will be discarted.
-func (lr *LineReader) Read(dst []byte) (nread int, ndiscarted int, err error) {
+func (lr *T) Read(dst []byte) (nread int, ndiscarted int, err error) {
 	// copy as much of read buffer as possible to dst
 	if len(lr.readbuf) > 0 {
 		// fast path: can we get a new line from the read buffer?
@@ -98,7 +98,7 @@ func (lr *LineReader) Read(dst []byte) (nread int, ndiscarted int, err error) {
 	}
 }
 
-func (lr *LineReader) discardRestOfLine() int {
+func (lr *T) discardRestOfLine() int {
 	// discard the rest of the line in the read buffer
 
 	if len(lr.readbuf) > 0 {
