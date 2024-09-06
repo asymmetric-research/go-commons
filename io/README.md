@@ -3,7 +3,7 @@
 ## LineReader
 ### Usage
 ```go
-lr := NewLineReader(reader, 4098 /* blockSize */)
+lr := NewLineReader(reader, 4096 /* blockSize */)
 line := [12288]byte{}
 
 var err error
