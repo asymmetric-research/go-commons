@@ -24,7 +24,7 @@ func TestLineReader(t *testing.T) {
 	var n int
 
 	for err != io.EOF {
-		n, _, err = r.Read(linesback[:])
+		n, _, err = r.ReadExtra(linesback[:])
 		line = linesback[:n]
 		require.Equal(t, expectedLines[0], string(line))
 		expectedLines = expectedLines[1:]
@@ -45,7 +45,7 @@ func TestLinesOfReaderTruncation(t *testing.T) {
 	var n int
 
 	for err != io.EOF {
-		n, _, err = r.Read(linesback[:])
+		n, _, err = r.ReadExtra(linesback[:])
 		if err != nil {
 			break
 		}
@@ -129,7 +129,7 @@ func runOurs(t require.TestingT, r io.Reader) {
 
 	cnt := 0
 	for err == nil {
-		_, _, err = rd.Read(lineBacking[:])
+		_, _, err = rd.ReadExtra(lineBacking[:])
 		cnt += 1
 	}
 	require.Equal(t, 283, cnt)

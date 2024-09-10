@@ -2,6 +2,7 @@ package linereader
 
 import (
 	"bytes"
+	"errors"
 	"io"
 
 	armath "github.com/asymmetric-research/go-commons/math"
@@ -28,9 +29,17 @@ func NewInto(dst *T, reader io.Reader, blockSize uint) {
 	}
 }
 
-// Read reads as much as possible into p, until the next newline or EOF is reached.
+func (lr *T) Read(dst []byte) (n int, err error) {
+	n, discarded, err := lr.ReadExtra(dst)
+	if discarded != 0 {
+		return n + discarded, errors.New("line too long")
+	}
+	return n, err
+}
+
+// ReadExtra reads as much as possible into p, until the next newline or EOF is reached.
 // Every new call to read starts on a new line. The remainder of the previous line will be discarted.
-func (lr *T) Read(dst []byte) (nread int, ndiscarted int, err error) {
+func (lr *T) ReadExtra(dst []byte) (nread int, ndiscarted int, err error) {
 	// copy as much of read buffer as possible to dst
 	if len(lr.readbuf) > 0 {
 		// fast path: can we get a new line from the read buffer?
