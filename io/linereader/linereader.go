@@ -32,7 +32,7 @@ func NewInto(dst *T, reader io.Reader, blockSize uint) {
 func (lr *T) Read(dst []byte) (n int, err error) {
 	n, discarded, err := lr.ReadExtra(dst)
 	if discarded != 0 {
-		return n + discarded, errors.New("line too long")
+		return n, errors.New("line too long")
 	}
 	return n, err
 }
