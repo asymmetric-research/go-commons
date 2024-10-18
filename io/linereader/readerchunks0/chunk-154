@@ -1,0 +1,1 @@
+ lim: 20000 exec/s: 64669 rss: 513Mb L: 1838/8192 MS: 6 InsertRepeatedBytes-ChangeASCIIInt-EraseBytes-ChangeBinInt-ChangeByte-CrossOver-
