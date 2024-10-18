@@ -3,10 +3,13 @@ package linereader_test
 import (
 	"bytes"
 	"io"
+	"path"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/asymmetric-research/go-commons/io/linereader"
+	"github.com/asymmetric-research/go-commons/io/readchunkdump"
 	"github.com/stretchr/testify/require"
 
 	gocmd "github.com/go-cmd/cmd"
@@ -25,6 +28,9 @@ func TestLineReader(t *testing.T) {
 
 	for err != io.EOF {
 		n, _, err = r.ReadExtra(linesback[:])
+		if n == 0 && err == io.EOF {
+			continue
+		}
 		line = linesback[:n]
 		require.Equal(t, expectedLines[0], string(line))
 		expectedLines = expectedLines[1:]
@@ -44,8 +50,14 @@ func TestLinesOfReaderTruncation(t *testing.T) {
 	var err error
 	var n int
 
+	var i = 0
 	for err != io.EOF {
+		i += 1
 		n, _, err = r.ReadExtra(linesback[:])
+		if n == 0 && err == io.EOF {
+			break
+		}
+
 		if err != nil {
 			break
 		}
@@ -63,6 +75,32 @@ func TestLinesOfReaderTruncation(t *testing.T) {
 
 	require.ErrorIs(t, err, io.EOF)
 	require.Emptyf(t, expectedLines, "should have produced as many lines as expected")
+}
+
+func TestReplay(t *testing.T) {
+	_, currentFile, _, _ := runtime.Caller(0)
+	currentDir := path.Dir(currentFile)
+
+	r, err := readchunkdump.NewReplayer(
+		path.Join(currentDir, "readerchunks0"),
+	)
+	require.NoError(t, err)
+	lr := linereader.New(r, 1024*4)        // 4K read buffer
+	backingBuf := [20 * 1024 * 1024]byte{} // 20MB max line
+
+	for i := 0; ; i++ {
+		n, dis, rerr := lr.ReadExtra(backingBuf[:])
+		_ = dis
+
+		rb := backingBuf[:n]
+
+		if bytes.ContainsRune(rb, '\x00') {
+			t.FailNow()
+		}
+		if rerr == io.EOF {
+			return
+		}
+	}
 }
 
 // Unbuffered Benchmarks
@@ -132,7 +170,8 @@ func runOurs(t require.TestingT, r io.Reader) {
 		_, _, err = rd.ReadExtra(lineBacking[:])
 		cnt += 1
 	}
-	require.Equal(t, 283, cnt)
+	cnt -= 1 // account for the last error
+	require.Equal(t, reportLineCount, cnt)
 }
 
 func runHashicorps(t require.TestingT, r io.Reader) {
@@ -491,4 +530,10 @@ func (l *LineByLineReader) Read(dst []byte) (int, error) {
 	l.data = l.data[n:]
 
 	return n, nil
+}
+
+var reportLineCount int
+
+func init() {
+	reportLineCount = strings.Count(report, "\n") + 1
 }

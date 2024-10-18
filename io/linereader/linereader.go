@@ -12,6 +12,7 @@ type T struct {
 	readbufbase []byte
 	readbuf     []byte
 	blocksize   uint
+	readerErr   error
 }
 
 func New(reader io.Reader, blockSize uint) *T {
@@ -39,6 +40,12 @@ func (lr *T) Read(dst []byte) (n int, err error) {
 // ReadExtra reads as much as possible into p, until the next newline or EOF is reached.
 // Every new call to read starts on a new line. The remainder of the previous line will be discarted.
 func (lr *T) ReadExtra(dst []byte) (nread int, ndiscarted int, err error) {
+
+	// check if the reader is done
+	if len(lr.readbuf) == 0 && lr.readerErr != nil {
+		return 0, 0, lr.readerErr
+	}
+
 	// copy as much of read buffer as possible to dst
 	if len(lr.readbuf) > 0 {
 		// fast path: can we get a new line from the read buffer?
@@ -57,11 +64,15 @@ func (lr *T) ReadExtra(dst []byte) (nread int, ndiscarted int, err error) {
 		lr.readbuf = lr.readbuf[n:]
 		dst = dst[n:]
 
+		if len(lr.readbuf) == 0 && lr.readerErr != nil {
+			return nread, 0, nil
+		}
 	}
 
 	for i := uint(0); ; i++ {
 		readOffset := lr.blocksize * i
-		readLimit := armath.Min(readOffset+lr.blocksize, uint(len(dst)))
+		//readLimit := armath.Min(readOffset+lr.blocksize, uint(len(dst)))
+		readLimit := armath.Min(lr.blocksize, uint(len(dst)))
 
 		// dst has been filled and there hasn't been a new line yet
 		if readLimit <= readOffset {
@@ -71,18 +82,21 @@ func (lr *T) ReadExtra(dst []byte) (nread int, ndiscarted int, err error) {
 
 		dstClamp := dst[readOffset:readLimit]
 		var n int
-		n, err = lr.reader.Read(dstClamp)
+		n, lr.readerErr = lr.reader.Read(dstClamp)
 		dstClamp = dstClamp[:n]
 		nread += n
 
-		if err == io.EOF && n == 0 {
-			return
-		} else if err != nil {
-			return
+		if nread == 0 && lr.readerErr != nil {
+			return 0, 0, lr.readerErr
 		}
 
 		// is there a end of line in this block?
 		eolidx := bytes.IndexByte(dstClamp, '\n')
+
+		if lr.readerErr != nil && eolidx == -1 {
+			lr.readbuf = nil // there is no next read
+			return nread, 0, nil
+		}
 
 		if eolidx < 0 {
 			continue
