@@ -2,16 +2,17 @@ package ringbuffer
 
 import (
 	"fmt"
+	"sync/atomic"
 
 	armath "github.com/asymmetric-research/go-commons/math"
 )
 
 type T[C any] struct {
-	buflen uint
+	buflen uint64
 	buf    []C
 
 	// head points to the next free slot
-	head uint
+	head uint64
 }
 
 func New[C any](size int) (*T[C], error) {
@@ -26,7 +27,7 @@ func NewInto[C any](dst *T[C], buf []C) error {
 		return fmt.Errorf("backing buffer must have a greater than zero")
 	}
 	*dst = T[C]{
-		buflen: uint(len(buf)),
+		buflen: uint64(len(buf)),
 		buf:    buf,
 		head:   0,
 	}
@@ -34,8 +35,8 @@ func NewInto[C any](dst *T[C], buf []C) error {
 }
 
 func (r *T[C]) Push(item C) {
-	r.buf[r.head%r.buflen] = item
-	r.head += 1
+	off := atomic.AddUint64(&r.head, 1)
+	r.buf[(off-1)%r.buflen] = item
 }
 
 func (r *T[C]) Last(dst []C) int {
@@ -80,7 +81,7 @@ func (r *T[C]) Last(dst []C) int {
 	return n
 }
 
-func (r *T[C]) Len() uint {
+func (r *T[C]) Len() uint64 {
 	used := armath.Min(r.buflen, r.head)
 	return used
 }
@@ -92,8 +93,8 @@ const (
 	SEQ_MODE_FILO
 )
 
-func (r *T[C]) Seq(seqMode SeqMode) func(yield func(uint, C) bool) {
-	return func(yield func(uint, C) bool) {
+func (r *T[C]) Seq(seqMode SeqMode) func(yield func(uint64, C) bool) {
+	return func(yield func(uint64, C) bool) {
 		if r.buflen == 0 {
 			return
 		}
