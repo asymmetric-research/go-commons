@@ -26,7 +26,7 @@ func TestLineReader(t *testing.T) {
 	var err error
 	var n int
 
-	for err != io.EOF {
+	for i := 0; err != io.EOF; i++ {
 		n, _, err = r.ReadExtra(linesback[:])
 		if n == 0 && err == io.EOF {
 			continue
@@ -536,4 +536,31 @@ var reportLineCount int
 
 func init() {
 	reportLineCount = strings.Count(report, "\n") + 1
+}
+
+func TestTruncated(t *testing.T) {
+	_, currentFile, _, _ := runtime.Caller(0)
+	currentDir := path.Dir(currentFile)
+
+	r, err := readchunkdump.NewReplayer(
+		path.Join(currentDir, "readerchunkstruncated"),
+	)
+	require.NoError(t, err)
+	lr := linereader.New(r, 1024*4)        // 4K read buffer
+	backingBuf := [20 * 1024 * 1024]byte{} // 20MB max line
+
+	for i := 0; ; i++ {
+		n, dis, rerr := lr.ReadExtra(backingBuf[:])
+
+		require.Zero(t, dis)
+
+		rb := backingBuf[:n]
+
+		if bytes.ContainsRune(rb, '\x00') {
+			t.FailNow()
+		}
+		if rerr == io.EOF {
+			return
+		}
+	}
 }

@@ -1,0 +1,4 @@
+INFO: Target 0: /tmp/fuzzcorp-dl-cache/uLb1x50jkHHBmgweIO5aL9vkNGFxveWFAk4ULw/unpacked/lib/libsolfuzz_agave.so
+INFO: Target 1: /tmp/fuzzcorp-dl-cache/uLb1x50jkHHBmgweIO5aL9vkNGFxveWFAk4ULw/unpacked/lib/libfd_exec_sol_compat.so
+--log-path ""
+No log

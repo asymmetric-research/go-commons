@@ -1,0 +1,2 @@
+INFO: Loaded 3 modules   (1083633 inline 8-bit counters): 19597 [0x6047114dd4d0, 0x6047114e215d), 1021372 [0x7c88a335ec00, 0x7c88a34581bc), 42664 [0x7c889c7969b0, 0x7c889c7a1058), 
+INFO: Loaded 3 PC tables (1083633 PCs): 19597 [0x6047114e2160,0x60471152ea30), 
