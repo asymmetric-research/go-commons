@@ -62,7 +62,6 @@ func (lr *T) ReadExtra(dst []byte) (nread int, ndiscarted int, err error) {
 		n := copy(dst, lr.readbuf)
 		nread += n
 		lr.readbuf = lr.readbuf[n:]
-		dst = dst[n:]
 
 		if len(lr.readbuf) == 0 && lr.readerErr != nil {
 			return nread, 0, nil
@@ -70,8 +69,7 @@ func (lr *T) ReadExtra(dst []byte) (nread int, ndiscarted int, err error) {
 	}
 
 	for i := uint(0); ; i++ {
-		readOffset := lr.blocksize * i
-		//readLimit := armath.Min(readOffset+lr.blocksize, uint(len(dst)))
+		readOffset := uint(nread)
 		readLimit := armath.Min(lr.blocksize, uint(len(dst)))
 
 		// dst has been filled and there hasn't been a new line yet

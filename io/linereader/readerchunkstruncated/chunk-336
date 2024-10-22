@@ -1,0 +1,2 @@
+0x604711307ea0  (/tmp/fuzzcorp-dl-cache/uLb1x50jkHHBmgweIO5aL9vkNGFxveWFAk4ULw/unpacked/target/fuzz_sol_txn+0x390ea0)
+	NEW_FUNC[2/6]: 0x7c889f2688c0  (/tmp/fuzzcorp-dl-cache/uLb1x50jkHHBmgweIO5aL9vkNGFxveWFAk4ULw/unpacked/lib/libsolfuzz_agave.so+0x29b18c0) (BuildId: bd33607aa1c623f243804dff557a34df86a26961)
